@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>明日方舟·简易塔防</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1a1f2e 0%, #2a2f3f 100%);
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .game-container {
+            background: #0d0f14;
+            border-radius: 32px;
+            padding: 24px 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.08);
+            border: 1px solid #3e4355;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 8px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e6e9f0;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px #00000080;
+        }
+
+        .logo-icon {
+            background: #2c3142;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: inset 0 1px 3px #ffffff1a, 0 6px 10px #00000060;
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .stats {
+            display: flex;
+            gap: 28px;
+            background: #181c26;
+            padding: 10px 24px;
+            border-radius: 60px;
+            box-shadow: inset 0 4px 6px #00000060, 0 4px 8px #00000030;
+            border: 1px solid #32384a;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #b9c2d4;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #f0f4ff;
+            font-size: 22px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+            text-shadow: 0 0 10px #6d8cffb0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            border-radius: 20px;
+            background: #10131c;
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px #2e3346, 0 10px 20px #00000060;
+        }
+
+        canvas {
+            display: block;
+            width: 800px;
+            height: 600px;
+            border-radius: 16px;
+            background: #1b1f2b;
+            cursor: crosshair;
+            box-shadow: 0 0 0 2px #252b3b;
+        }
+
+        .bottom-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 0 10px;
+            gap: 20px;
+        }
+
+        .operators {
+            display: flex;
+            gap: 16px;
+        }
+
+        .operator-card {
+            background: #222838;
+            border-radius: 18px;
+            padding: 8px 16px 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: inset 0 1px 2px #ffffff1a, 0 8px 12px #00000050;
+            border: 1px solid #3a4055;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .operator-card.selected {
+            border: 2px solid #5f8aff;
+            box-shadow: 0 0 16px #3f6effaa, inset 0 1px 2px #ffffff40;
+            background: #2e364b;
+        }
+
+        .operator-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: #151a24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: inset 0 2px 6px #000000, 0 2px 4px #ffffff0d;
+        }
+
+        .operator-info h4 {
+            margin: 0 0 4px 0;
+            color: #ecf0ff;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        .operator-cost {
+            color: #9db4ff;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: #252c3e;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 28px;
+            color: #d4ddf5;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #0c0f17, 0 8px 16px #00000060;
+            transition: all 0.08s ease;
+            border: 1px solid #48506b;
+            text-transform: uppercase;
+        }
+
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 1px 0 #0c0f17, 0 5px 10px #00000060;
+        }
+
+        .btn:hover {
+            background: #2f3850;
+            color: #ffffff;
+        }
+
+        .hp-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hp-fill {
+            color: #ff6b7c;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="header">
+        <div class="logo">
+            <span class="logo-icon">⚔️</span>
+            <span>ARKNIGHTS · 简易防卫</span>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">COST</span>
+                <span class="stat-value" id="costDisplay">10</span>
+            </div>
+            <div class="stat-item hp-bar">
+                <span class="stat-label">LIFE</span>
+                <span class="stat-value hp-fill" id="lifeDisplay">10</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <div class="bottom-panel">
+        <div class="operators" id="operatorList">
+            <div class="operator-card" data-type="vanguard" data-cost="8">
+                <div class="operator-icon">🗡️</div>
+                <div class="operator-info">
+                    <h4>先锋</h4>
+                    <div class="operator-cost">
+                        <span>⚡</span> <span>8</span>
+                    </div>
+                </div>
+            </div>
+            <div class="operator-card" data-type="sniper" data-cost="12">
+                <div class="operator-icon">🏹</div>
+                <div class="operator-info">
+                    <h4>狙击</h4>
+                    <div class="operator-cost">
+                        <span>⚡</span> <span>12</span>
+                    </div>
+                </div>
+            </div>
+            <div class="operator-card" data-type="defender" data-cost="14">
+                <div class="operator-icon">🛡️</div>
+                <div class="operator-info">
+                    <h4>重装</h4>
+                    <div class="operator-cost">
+                        <span>⚡</span> <span>14</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn" id="restartBtn">重新部署</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const costDisplay = document.getElementById('costDisplay');
+        const lifeDisplay = document.getElementById('lifeDisplay');
+
+        const COLS = 10;
+        const ROWS = 7;
+        const CELL_SIZE = 80;
+
+        const pathPoints = [
+            { x: -1, y: 3 },
+            { x: 2, y: 3 },
+            { x: 2, y: 1 },
+            { x: 5, y: 1 },
+            { x: 5, y: 5 },
+            { x: 8, y: 5 },
+            { x: 8, y: 3 },
+            { x: 10, y: 3 },
+        ];
+
+        const pathCells = new Set();
+        for (let i = 0; i < pathPoints.length - 1; i++) {
+            const from = pathPoints[i];
+            const to = pathPoints[i + 1];
+            const stepX = Math.sign(to.x - from.x);
+            const stepY = Math.sign(to.y - from.y);
+            let x = from.x;
+            let y = from.y;
+            if (x >= 0 && x < COLS && y >= 0 && y < ROWS) pathCells.add(x + ',' + y);
+            while (x !== to.x || y !== to.y) {
+                x += stepX;
+                y += stepY;
+                if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
+                    pathCells.add(x + ',' + y);
+                }
+            }
+        }
+
+        let cost = 10;
+        let life = 10;
+        let enemies = [];
+        let towers = [];
+        let projectiles = [];
+        let selectedOperatorType = null;
+        let gameOver = false;
+        let victory = false;
+
+        let spawnInterval = 0;
+        const SPAWN_DELAY_MS = 1500;
+        let enemiesSpawned = 0;
+        const MAX_ENEMIES = 8;
+
+        let lastTimestamp = 0;
+
+        const TOWER_STATS = {
+            vanguard: { name: '先锋', cost: 8, range: 1.8, damage: 14, cooldown: 38, color: '#5f9eff', icon: '🗡️' },
+            sniper: { name: '狙击', cost: 12, range: 3.2, damage: 26, cooldown: 50, color: '#ffb347', icon: '🏹' },
+            defender: { name: '重装', cost: 14, range: 1.5, damage: 10, cooldown: 28, color: '#7a9e7e', icon: '🛡️' }
+        };
+
+        const ENEMY_HP = 35;
+
+        function updateUI() {
+            costDisplay.textContent = Math.floor(cost);
+            lifeDisplay.textContent = life;
+        }
+
+        function isPathCell(col, row) {
+            return pathCells.has(col + ',' + row);
+        }
+
+        function isOccupied(col, row) {
+            for (let i = 0; i < towers.length; i++) {
+                if (towers[i].col === col && towers[i].row === row) return true;
+            }
+            return false;
+        }
+
+        function getGridFromPixel(px, py) {
+            const col = Math.floor(px / CELL_SIZE);
+            const row = Math.floor(py / CELL_SIZE);
+            if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return null;
+            return { col: col, row: row };
+        }
+
+        function placeTower(col, row, type) {
+            if (gameOver || victory) return false;
+            if (isPathCell(col, row)) return false;
+            if (isOccupied(col, row)) return false;
+
+            const stats = TOWER_STATS[type];
+            if (!stats) return false;
+            if (cost < stats.cost) return false;
+
+            cost -= stats.cost;
+            towers.push({
+                col: col,
+                row: row,
+                type: type,
+                cooldown: 0,
+                stats: stats
+            });
+
+            updateUI();
+            return true;
+        }
+
+        function spawnEnemy() {
+            if (gameOver || victory) return;
+            if (enemiesSpawned >= MAX_ENEMIES) return;
+
+            enemiesSpawned++;
+            enemies.push({
+                id: Math.random() + Date.now() + Math.random(),
+                hp: ENEMY_HP,
+                maxHp: ENEMY_HP,
+                pathIndex: 0,
+                t: 0,
+                x: pathPoints[0].x,
+                y: pathPoints[0].y,
+                reachedEnd: false,
+                hitFlash: 0
+            });
+        }
+
+        function updateEnemiesDelta(delta) {
+            const timeScale = delta / 16.667;
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
+
+                if (e.reachedEnd) {
+                    enemies.splice(i, 1);
+                    life -= 1;
+                    updateUI();
+                    if (life <= 0) {
+                        life = 0;
+                        gameOver = true;
+                        updateUI();
+                    }
+                    continue;
+                }
+
+                if (e.pathIndex >= pathPoints.length - 1) {
+                    e.reachedEnd = true;
+                    e.x = pathPoints[pathPoints.length - 1].x;
+                    e.y = pathPoints[pathPoints.length - 1].y;
+                    continue;
+                }
+
+                const from = pathPoints[e.pathIndex];
+                const to = pathPoints[e.pathIndex + 1];
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const segLength = Math.sqrt(dx * dx + dy * dy);
+
+                const movePerFrame = 0.013;
+                const moveAmount = movePerFrame * timeScale;
+                const tDelta = moveAmount / segLength;
+
+                e.t += tDelta;
+
+                if (e.t >= 1.0) {
+                    e.pathIndex++;
+                    e.t = 0;
+                    if (e.pathIndex >= pathPoints.length - 1) {
+                        e.x = pathPoints[pathPoints.length - 1].x;
+                        e.y = pathPoints[pathPoints.length - 1].y;
+                        e.reachedEnd = true;
+                        continue;
+                    } else {
+                        const newFrom = pathPoints[e.pathIndex];
+                        e.x = newFrom.x;
+                        e.y = newFrom.y;
+                    }
+                } else {
+                    e.x = from.x + dx * e.t;
+                    e.y = from.y + dy * e.t;
+                }
+            }
+        }
+
+        function updateTowers(delta) {
+            const timeScale = delta / 16.667;
+
+            for (let ti = 0; ti < towers.length; ti++) {
+                const tower = towers[ti];
+
+                if (tower.cooldown > 0) {
+                    tower.cooldown -= timeScale;
+                }
+                if (tower.cooldown > 0) continue;
+
+                const stats = tower.stats;
+                const towerCenterX = (tower.col + 0.5) * CELL_SIZE;
+                const towerCenterY = (tower.row + 0.5) * CELL_SIZE;
+                const rangePx = stats.range * CELL_SIZE;
+
+                let target = null;
+                let minDist = Infinity;
+
+                for (let ei = 0; ei < enemies.length; ei++) {
+                    const enemy = enemies[ei];
+                    if (enemy.reachedEnd) continue;
+                    const enemyX = (enemy.x + 0.5) * CELL_SIZE;
+                    const enemyY = (enemy.y + 0.5) * CELL_SIZE;
+                    const ddx = enemyX - towerCenterX;
+                    const ddy = enemyY - towerCenterY;
+                    const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                    if (dist <= rangePx && dist < minDist) {
+                        minDist = dist;
+                        target = enemy;
+                    }
+                }
+
+                if (target) {
+                    tower.cooldown = stats.cooldown;
+                    const startX = towerCenterX;
+                    const startY = towerCenterY;
+                    const targetX = (target.x + 0.5) * CELL_SIZE;
+                    const targetY = (target.y + 0.5) * CELL_SIZE;
+
+                    projectiles.push({
+                        startX: startX,
+                        startY: startY,
+                        targetX: targetX,
+                        targetY: targetY,
+                        progress: 0,
+                        speed: 0.035,
+                        damage: stats.damage,
+                        targetEnemyId: target.id,
+                        color: stats.color
+                    });
+                }
+            }
+        }
+
+        function updateProjectiles(delta) {
+            const timeScale = delta / 16.667;
+
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.progress += p.speed * timeScale;
+
+                if (p.progress >= 1.0) {
+                    let targetEnemy = null;
+                    for (let j = 0; j < enemies.length; j++) {
+                        if (enemies[j].id === p.targetEnemyId) {
+                            targetEnemy = enemies[j];
+                            break;
+                        }
+                    }
+
+                    if (targetEnemy && !targetEnemy.reachedEnd) {
+                        targetEnemy.hp -= p.damage;
+                        targetEnemy.hitFlash = 6;
+                        if (targetEnemy.hp <= 0) {
+                            const idx = enemies.indexOf(targetEnemy);
+                            if (idx !== -1) {
+                                enemies.splice(idx, 1);
+                                cost += 6;
+                                updateUI();
+                            }
+                        }
+                    }
+
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let targetStillExists = false;
+                for (let j = 0; j < enemies.length; j++) {
+                    if (enemies[j].id === p.targetEnemyId && !enemies[j].reachedEnd) {
+                        targetStillExists = true;
+                        break;
+                    }
+                }
+
+                if (!targetStillExists) {
+                    projectiles.splice(i, 1);
+                }
+            }
+        }
+
+        function updateHitFlash(delta) {
+            const timeScale = delta / 16.667;
+            for (let i = 0; i < enemies.length; i++) {
+                if (enemies[i].hitFlash > 0) {
+                    enemies[i].hitFlash -= timeScale;
+                }
+            }
+        }
+
+        function drawGrid() {
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const x = col * CELL_SIZE;
+                    const y = row * CELL_SIZE;
+                    const isPath = isPathCell(col, row);
+
+                    if (isPath) {
+                        ctx.fillStyle = '#2e3547';
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = '#3e465e';
+                        ctx.fillRect(x + 4, y + 4, CELL_SIZE - 8, CELL_SIZE - 8);
+                    } else {
+                        ctx.fillStyle = '#1e232f';
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                        ctx.fillStyle = '#252b38';
+                        ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    }
+
+                    ctx.strokeStyle = '#2e3444';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 0.5, y + 0.5, CELL_SIZE, CELL_SIZE);
+                }
+            }
+
+            ctx.font = 'bold 26px "Segoe UI", "Roboto", sans-serif';
+            ctx.fillStyle = '#ffffff30';
+            ctx.fillText('🚪', 8, 3 * CELL_SIZE + 52);
+            ctx.fillStyle = '#ffd96680';
+            ctx.fillText('🏁', (COLS - 1) * CELL_SIZE + 10, 3 * CELL_SIZE + 52);
+        }
+
+        function drawTowers() {
+            for (let i = 0; i < towers.length; i++) {
+                const tower = towers[i];
+                const x = tower.col * CELL_SIZE;
+                const y = tower.row * CELL_SIZE;
+                const stats = tower.stats;
+
+                ctx.shadowColor = '#00000080';
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = '#212838';
+                ctx.fillRect(x + 6, y + 6, CELL_SIZE - 12, CELL_SIZE - 12);
+
+                ctx.shadowBlur = 18;
+                ctx.fillStyle = stats.color;
+                ctx.fillRect(x + 12, y + 12, CELL_SIZE - 24, CELL_SIZE - 24);
+
+                ctx.shadowBlur = 8;
+                ctx.font = '38px "Segoe UI", "Roboto", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(stats.icon, x + CELL_SIZE / 2, y + CELL_SIZE / 2);
+
+                if (selectedOperatorType === tower.type) {
+                    ctx.shadowBlur = 20;
+                    ctx.strokeStyle = '#ffffff80';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(x + CELL_SIZE / 2, y + CELL_SIZE / 2, stats.range * CELL_SIZE, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            }
+        }
+
+        function drawEnemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.reachedEnd) continue;
+
+                const cx = (e.x + 0.5) * CELL_SIZE;
+                const cy = (e.y + 0.5) * CELL_SIZE;
+                const hpPercent = e.hp / e.maxHp;
+
+                ctx.shadowBlur = 16;
+                ctx.shadowColor = '#aa0000aa';
+
+                if (e.hitFlash > 0) {
+                    ctx.fillStyle = '#ffffff';
+                } else {
+                    ctx.fillStyle = '#e03a4e';
+                }
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#1e1e1e';
+                ctx.beginPath();
+                ctx.arc(cx - 8, cy - 6, 6, 0, Math.PI * 2);
+                ctx.arc(cx + 8, cy - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f0f0f0';
+                ctx.beginPath();
+                ctx.arc(cx - 10, cy - 9, 2.5, 0, Math.PI * 2);
+                ctx.arc(cx + 6, cy - 9, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                const barWidth = 52;
+                const barX = cx - barWidth / 2;
+                const barY = cy - 40;
+
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = '#2e1a1a';
+                ctx.fillRect(barX, barY, barWidth, 8);
+
+                if (hpPercent > 0.6) {
+                    ctx.fillStyle = '#5fdb5f';
+                } else if (hpPercent > 0.3) {
+                    ctx.fillStyle = '#f9d44a';
+                } else {
+                    ctx.fillStyle = '#f96a5c';
+                }
+                ctx.fillRect(barX, barY, barWidth * hpPercent, 8);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawProjectiles() {
+            for (let i = 0; i < projectiles.length; i++) {
+                const p = projectiles[i];
+                const currX = p.startX + (p.targetX - p.startX) * p.progress;
+                const currY = p.startY + (p.targetY - p.startY) * p.progress;
+
+                ctx.shadowBlur = 14;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(currX, currY, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 6;
+                ctx.fillStyle = '#ffffffd0';
+                ctx.beginPath();
+                ctx.arc(currX - 4, currY - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawGameOverlay() {
+            if (gameOver) {
+                ctx.fillStyle = '#0a0c12dd';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'bold 52px "Segoe UI", "Roboto", sans-serif';
+                ctx.fillStyle = '#ff6b7c';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff0000';
+                ctx.textAlign = 'center';
+                ctx.fillText('作战失败', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.font = '24px sans-serif';
+                ctx.fillStyle = '#bbbbbb';
+                ctx.fillText('点击"重新部署"再试一次', canvas.width / 2, canvas.height / 2 + 60);
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'left';
+            } else if (victory) {
+                ctx.fillStyle = '#0a0c12dd';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'bold 52px "Segoe UI", "Roboto", sans-serif';
+                ctx.fillStyle = '#b7f0b1';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#00aa00';
+                ctx.textAlign = 'center';
+                ctx.fillText('任务完成', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.font = '24px sans-serif';
+                ctx.fillStyle = '#dddddd';
+                ctx.fillText('罗德岛感谢您的付出', canvas.width / 2, canvas.height / 2 + 60);
+                ctx.shadowBlur = 0;
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawTowers();
+            drawEnemies();
+            drawProjectiles();
+            drawGameOverlay();
+        }
+
+        function gameLoop(now) {
+            if (!lastTimestamp) lastTimestamp = now;
+            let delta = Math.min(now - lastTimestamp, 50);
+            lastTimestamp = now;
+
+            if (!gameOver && !victory) {
+                spawnInterval += delta;
+                if (spawnInterval >= SPAWN_DELAY_MS && enemiesSpawned < MAX_ENEMIES) {
+                    spawnEnemy();
+                    spawnInterval = 0;
+                }
+
+                if (enemiesSpawned >= MAX_ENEMIES && enemies.length === 0 && !gameOver) {
+                    victory = true;
+                }
+
+                updateEnemiesDelta(delta);
+                updateTowers(delta);
+                updateProjectiles(delta);
+                updateHitFlash(delta);
+
+                cost += 0.03 * (delta / 16.667);
+            }
+
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            cost = 10;
+            life = 10;
+            enemies = [];
+            towers = [];
+            projectiles = [];
+            selectedOperatorType = null;
+            gameOver = false;
+            victory = false;
+            spawnInterval = 0;
+            enemiesSpawned = 0;
+            lastTimestamp = 0;
+            updateUI();
+
+            const cards = document.querySelectorAll('.operator-card');
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].classList.remove('selected');
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        const operatorCards = document.querySelectorAll('.operator-card');
+        for (let i = 0; i < operatorCards.length; i++) {
+            operatorCards[i].addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+
+                for (let j = 0; j < operatorCards.length; j++) {
+                    operatorCards[j].classList.remove('selected');
+                }
+
+                if (selectedOperatorType === type) {
+                    selectedOperatorType = null;
+                } else {
+                    selectedOperatorType = type;
+                    this.classList.add('selected');
+                }
+            });
+        }
+
+        canvas.addEventListener('click', function(event) {
+            if (gameOver || victory) return;
+            if (!selectedOperatorType) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (event.clientX - rect.left) * scaleX;
+            const mouseY = (event.clientY - rect.top) * scaleY;
+
+            const grid = getGridFromPixel(mouseX, mouseY);
+            if (!grid) return;
+
+            const success = placeTower(grid.col, grid.row, selectedOperatorType);
+
+            if (success) {
+                const cards = document.querySelectorAll('.operator-card');
+                for (let i = 0; i < cards.length; i++) {
+                    cards[i].classList.remove('selected');
+                }
+                selectedOperatorType = null;
+            }
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+        updateUI();
+        requestAnimationFrame(gameLoop);
+    })();
+</script>
+</body>
+</html>
